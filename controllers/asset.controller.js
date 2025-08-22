@@ -7,15 +7,9 @@ export const getAssets = async (req, res) => {
     const filter = {};
 
     if (req.query.type) {
-      // Case-insensitive matching for type
-      filter.type = { $regex: new RegExp(`^${req.query.type}$`, "i") };
+      filter.type = req.query.type; // e.g., ?type=weapon
     }
-
-    if (req.query.name) {
-      // Optional name-based search
-      filter.name = { $regex: req.query.name, $options: "i" };
-    }
-
+    console.log("\nType" +filter.type);
     const assets = await Asset.find(filter);
     res.json(assets);
   } catch (error) {

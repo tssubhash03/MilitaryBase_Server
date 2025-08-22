@@ -1,6 +1,6 @@
 import express from "express";
 import Asset from "../models/Asset.js";
-
+import { getAssets } from "../controllers/asset.controller.js";
 const router = express.Router();
 
 // ✅ Secret endpoint to create assets
@@ -24,4 +24,6 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ Public endpoint to get assets with optional filtering by type
+router.get("/filter", getAssets);
 export default router;
