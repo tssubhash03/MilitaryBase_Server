@@ -6,7 +6,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import assetRoutes from "./routes/asset.routes.js";
 import purchaseRoutes from "./routes/purchase.routes.js";
-
+import inventoryRoutes from "./routes/inventory.routes.js";
 dotenv.config();
 connectDB();
 
@@ -19,6 +19,6 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/assets", assetRoutes);
 app.use("/api/purchases", purchaseRoutes);
-
+app.get("api/inventory",inventoryRoutes);
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`\n\nServer running on port ${PORT}`));

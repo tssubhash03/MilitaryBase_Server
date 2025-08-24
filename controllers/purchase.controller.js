@@ -1,41 +1,45 @@
-import Purchase from "../models/Purchase.js";
+import Inventory from "../models/Inventory.js";
 import Asset from "../models/Asset.js";
+import Purchase from "../models/Purchase.js";
 
-// Create purchase
-export const createPurchase = async (req, res) => {
+export const purchaseAsset = async (req, res) => {
   try {
-    const { assetId, quantity, base } = req.body;
-    const user = req.user; // from authMiddleware
+    const { assetId, baseId, quantity, role} = req.body;
 
-    // If admin -> must select base
-    if (user.role === "admin" && !base) {
-      return res.status(400).json({ message: "Admin must choose a base" });
+    if (role === "commander") {
+      return res.status(403).json({ message: "Commander is not allowed to perform purchase" });
     }
 
-    // If logistics -> auto assign to their base
-    const finalBase = user.role === "logistics" ? user.base : base;
+    const asset = await Asset.findById(assetId);
+    if (!asset) {
+      return res.status(404).json({ message: "Asset not found" });
+    }
 
-    const purchase = new Purchase({
+    // check if inventory exists for this base & asset
+    let inventory = await Inventory.findOne({ asset: assetId, base : baseId });
+
+    if (inventory) {
+      inventory.quantity += quantity;
+      await inventory.save();
+    } else {
+      inventory = await Inventory.create({ asset: assetId, base : baseId, quantity });
+    }
+
+    // ✅ create purchase log
+    const purchaseLog = await Purchase.create({
       asset: assetId,
+      baseId,
       quantity,
-      base: finalBase,
-      purchasedBy: user._id,
+      // purchasedBy: userId || null,
+      role,
     });
 
-    await purchase.save();
-    res.json({ message: "Purchase successful", purchase });
+    res.json({
+      message: "Inventory updated successfully, purchase logged",
+      inventory,
+      purchaseLog,
+    });
   } catch (error) {
     res.status(500).json({ message: "Purchase failed", error: error.message });
-  }
-};
-
-// Get all purchases for a base
-export const getBasePurchases = async (req, res) => {
-  try {
-    const baseId = req.params.baseId;
-    const purchases = await Purchase.find({ base: baseId }).populate("asset");
-    res.json(purchases);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch purchases", error: error.message });
   }
 };
